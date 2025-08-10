@@ -1,0 +1,13 @@
+{
+  "name": "pact-monorepo",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Root scripts to run the React client and backend easily",
+  "scripts": {
+    "client:dev": "npm --prefix client run dev",
+    "client:build": "npm --prefix client run build",
+    "client:preview": "npm --prefix client run preview",
+    "client:install": "npm --prefix client install",
+    "backend": "python main.py"
+  }
+}

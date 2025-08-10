@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PACT</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #050608;
+        --bg-grad-1: #050608;
+        --bg-grad-2: #0a0f16;
+        --panel: #0d141c;
+        --panel-2: #0f1923;
+        --text: #e6f1ff;
+        --text-muted: #7c90a9;
+        --border: #1b2a3a;
+        --accent: #1ec9c3; /* aqua/marina */
+        --accent-2: #3da9fc; /* ocean blue */
+        --accent-3: #14567a; /* deep sea */
+        --danger: #ff6b6b;
+        --shadow: 0 10px 30px rgba(0,0,0,0.5);
+        --radius: 12px;
+      }
+
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        color: var(--text);
+        background: radial-gradient(1200px 800px at 80% -10%, rgba(30,201,195,0.10), transparent 60%),
+                    radial-gradient(900px 600px at -10% 110%, rgba(61,169,252,0.10), transparent 60%),
+                    linear-gradient(180deg, var(--bg-grad-1), var(--bg-grad-2));
+        background-color: var(--bg);
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        padding: 1.25rem 1rem;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(10,15,22,0.9), rgba(10,15,22,0.6));
+        backdrop-filter: saturate(140%) blur(6px);
+      }
+
+      header h1 {
+        margin: 0 0 0.25rem 0;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+      }
+
+      main { padding: 1.25rem 1rem 2rem; }
+
+      .container { max-width: 1100px; margin: 0 auto; }
+      .muted { color: var(--text-muted); }
+      .error { color: var(--danger); }
+      .loading { opacity: 0.9; }
+
+      /* Toolbar */
+      .toolbar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 1rem;
+        background: linear-gradient(180deg, var(--panel), var(--panel-2));
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+      .label { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-muted); }
+      .label-text { font-size: 0.9rem; }
+
+      /* Inputs */
+      .input, .select {
+        flex: 1 1 auto;
+        min-width: 0;
+        padding: 0.6rem 0.75rem;
+        color: var(--text);
+        background: #0b121a;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      }
+      .select { flex: 0 0 auto; min-width: 180px; }
+      .input::placeholder { color: #5f748f; }
+      .input:focus, .select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(30,201,195,0.15);
+      }
+
+      /* Button */
+      .btn {
+        flex: 0 0 auto;
+        padding: 0.6rem 0.9rem;
+        border-radius: 10px;
+        border: 1px solid var(--accent-3);
+        color: var(--text);
+        background: linear-gradient(180deg, rgba(20,86,122,0.6), rgba(20,86,122,0.3));
+        text-shadow: 0 1px 0 rgba(0,0,0,0.3);
+        cursor: pointer;
+        transition: transform 0.08s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+      }
+      .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.35); border-color: var(--accent-2); }
+      .btn:active { transform: translateY(0); }
+      .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+      /* Table */
+      .table-wrap { overflow-x: auto; }
+      .table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: linear-gradient(180deg, var(--panel), var(--panel-2));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      .table thead th {
+        position: sticky;
+        top: 0;
+        background: linear-gradient(180deg, rgba(10,16,22,0.9), rgba(10,16,22,0.8));
+        color: var(--text-muted);
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        font-size: 12px;
+        border-bottom: 1px solid var(--border);
+        padding: 0.75rem;
+        text-align: left;
+      }
+      .table tbody td {
+        padding: 0.75rem;
+        border-bottom: 1px solid rgba(27,42,58,0.6);
+      }
+      .table tbody tr:hover {
+        background: linear-gradient(90deg, rgba(30,201,195,0.06), transparent 60%);
+      }
+      .table tbody tr:last-child td { border-bottom: none; }
+      code { color: var(--accent-2); }
+
+      /* Decorative marina lines */
+      .container::before {
+        content: "";
+        position: fixed;
+        inset: -200px -200px auto auto;
+        width: 420px;
+        height: 420px;
+        background: radial-gradient(closest-side, rgba(30,201,195,0.12), transparent 70%);
+        filter: blur(18px);
+        pointer-events: none;
+        z-index: -1;
+        transform: translate3d(0,0,0);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

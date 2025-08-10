@@ -1,0 +1,61 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+*.pdb
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python tooling caches
+.mypy_cache/
+.pytest_cache/
+.pyre/
+.pytype/
+.coverage
+htmlcov/
+.tox/
+
+# Local settings / env
+.env
+.env.*
+!.env.example
+
+# --- Node / Frontend (Vite/React) ---
+client/node_modules/
+client/dist/
+client/.vite/
+client/.parcel-cache/
+client/.eslintcache
+client/.turbo/
+
+# Package managers
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- General build outputs ---
+dist/
+build/
+
+# --- IDE / Editor ---
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+pact.iml
+
+# --- OS files ---
+.DS_Store
+Thumbs.db
+
+# --- Misc ---
+*.log
+.output.txt

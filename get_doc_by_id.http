@@ -1,0 +1,6 @@
+### GET request to example server
+GET http://localhost:8000/pacts/6896d9a6a21742e2eef1a647
+Accept: application/json
+
+
+###
