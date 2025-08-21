@@ -19,6 +19,10 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "http://localhost:80",
+        "http://127.0.0.1:80",
+        "http://localhost",
+        "http://127.0.0.1",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -40,7 +44,7 @@ def insert_document(name: str, description: str, date: datetime | None = None, c
     if date is None:
         date = datetime.now(timezone.utc)
 
-    with MongoClient("mongodb://localhost:27017/") as client:
+    with MongoClient("mongodb://host.docker.internal:27017/") as client:
         db = client.pactdb
         collection = db.pact
 
@@ -64,7 +68,7 @@ def get_document_by_id(document_id: str) -> Optional[dict]:
     except (InvalidId, TypeError):
         return None
 
-    with MongoClient("mongodb://localhost:27017/") as client:
+    with MongoClient("mongodb://host.docker.internal:27017/") as client:
         db = client.pactdb
         collection = db.pact
         doc = collection.find_one({"_id": oid})
@@ -97,7 +101,7 @@ def query_documents(
             date_range["$lte"] = end_date
         query["date"] = date_range
 
-    with MongoClient("mongodb://localhost:27017/") as client:
+    with MongoClient("mongodb://host.docker.internal:27017/") as client:
         db = client.pactdb
         collection = db.pact
 
@@ -202,7 +206,7 @@ def api_update_document(document_id: str, pact: PactUpdate):
     if unset_fields:
         update_doc["$unset"] = unset_fields
 
-    with MongoClient("mongodb://localhost:27017/") as client:
+    with MongoClient("mongodb://host.docker.internal:27017/") as client:
         db = client.pactdb
         collection = db.pact
         result = collection.update_one({"_id": oid}, update_doc)
@@ -220,9 +224,10 @@ def api_delete_document(document_id: str):
     except (InvalidId, TypeError):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid document id")
 
-    with MongoClient("mongodb://localhost:27017/") as client:
+    with MongoClient("mongodb://host.docker.internal:27017/") as client:
         db = client.pactdb
         collection = db.pact
+
         result = collection.delete_one({"_id": oid})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Document not found")
