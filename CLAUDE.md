@@ -74,9 +74,43 @@ $env:VITE_API_BASE_URL="http://localhost:8001"; npm run client:dev
 ### Docker Support
 Both backend and client have Dockerfiles for containerized deployment.
 
+### Docker Deployment
+Full-stack deployment with Docker Compose:
+```bash
+# Build and start all services
+docker-compose up --build -d
+
+# Services available at:
+# - Frontend: http://localhost:80
+# - Backend API: http://localhost:8000  
+# - MongoDB: localhost:27018
+```
+
 ## Prerequisites
 
 - Python 3.10+ for backend
 - Node.js 18+ for frontend
 - MongoDB running locally on default port (27017)
-- Add docker files for front-end and back-end respectively.
+- Docker and Docker Compose for containerized deployment
+
+## Recent Development Activities
+
+### Docker Deployment Implementation (2025-09-02)
+- **Objective**: Deploy both client and server to Docker Desktop
+- **Implementation**: 
+  - Created `docker-compose.yml` for orchestrating MongoDB, backend (FastAPI), and frontend (nginx) services
+  - Updated nginx configuration to proxy API calls to backend container
+  - Resolved port conflicts by using MongoDB on port 27018
+  - All services now run in isolated Docker network with proper inter-service communication
+- **Result**: Complete containerized deployment accessible at http://localhost
+
+### Pagination Feature Implementation (2025-09-02)  
+- **Objective**: Add pagination controls to the documents table with 10/50/100 per page options
+- **Implementation**:
+  - Added pagination state management (currentPage, itemsPerPage, totalItems)
+  - Implemented server-side pagination using existing API `limit` and `skip` parameters
+  - Created comprehensive pagination UI with first/previous/next/last navigation
+  - Added items-per-page selector with 10, 50, 100 options
+  - Integrated pagination with existing search, filter, and CRUD operations
+  - Fixed HTTP 422 error by respecting API's 500-item limit validation
+- **Result**: Fully functional pagination system that enhances navigation through large datasets

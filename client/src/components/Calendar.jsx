@@ -14,13 +14,8 @@ function getMonthMatrix(baseDate = new Date()) {
   for (let i = 0; i < startDay; i++) cells.push(null)
   // Fill days
   for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d))
-  // Pad to full weeks (up to 6 rows)
+  // Pad to complete the last week only
   while (cells.length % 7 !== 0) cells.push(null)
-  // Ensure at least 5 weeks; some months need 6 rows visually
-  if (cells.length / 7 < 6) {
-    const need = 42 - cells.length
-    for (let i = 0; i < need; i++) cells.push(null)
-  }
 
   // Chunk into weeks
   const weeks = []
