@@ -28,8 +28,11 @@ function getMonthMatrix(baseDate = new Date()) {
   return weeks
 }
 
-export default function Calendar({ date = new Date() }) {
-  const [viewDate, setViewDate] = useState(() => new Date(date.getFullYear(), date.getMonth(), 1))
+export default function Calendar({ date }) {
+  const [viewDate, setViewDate] = useState(() => {
+    const baseDate = date || new Date()
+    return new Date(baseDate.getFullYear(), baseDate.getMonth(), 1)
+  })
   const monthName = viewDate.toLocaleString(undefined, { month: 'long', year: 'numeric' })
   const weeks = useMemo(() => getMonthMatrix(viewDate), [viewDate])
   const todayKey = new Date().toDateString()
@@ -81,11 +84,19 @@ export default function Calendar({ date = new Date() }) {
     return map
   }, [items])
 
-  // Sync viewDate if parent prop changes
+  // Sync viewDate if parent prop changes (only when date prop is actually provided)
   useEffect(() => {
-    if (!(date instanceof Date)) return
-    setViewDate(new Date(date.getFullYear(), date.getMonth(), 1))
-  }, [date])
+    if (!date || !(date instanceof Date)) return
+    const newViewDate = new Date(date.getFullYear(), date.getMonth(), 1)
+    setViewDate(prevViewDate => {
+      // Only update if the month/year actually changed
+      if (prevViewDate.getFullYear() !== newViewDate.getFullYear() || 
+          prevViewDate.getMonth() !== newViewDate.getMonth()) {
+        return newViewDate
+      }
+      return prevViewDate
+    })
+  }, [date?.getTime()]) // Use getTime() to avoid reference comparison issues
 
   const monthValue = useMemo(() => `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}`, [viewDate])
   const goPrev = () => setViewDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1))
@@ -94,10 +105,10 @@ export default function Calendar({ date = new Date() }) {
     const now = new Date()
     setViewDate(new Date(now.getFullYear(), now.getMonth(), 1))
   }
-  const onMonthInput = (e) => {
-    const val = e?.target?.value
+  const onMonthChange = (e) => {
+    const val = e.target.value
     if (!val) return
-    const [y, m] = String(val).split('-')
+    const [y, m] = val.split('-')
     const yy = Number(y)
     const mm = Number(m)
     if (!isNaN(yy) && !isNaN(mm) && mm >= 1 && mm <= 12) {
@@ -119,7 +130,7 @@ export default function Calendar({ date = new Date() }) {
             className="input"
             aria-label="Select month"
             value={monthValue}
-            onChange={onMonthInput}
+            onChange={onMonthChange}
             style={{ minWidth: '140px' }}
           />
           <button className="btn" aria-label="Next month" onClick={goNext}>&gt;</button>

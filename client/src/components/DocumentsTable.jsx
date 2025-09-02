@@ -32,29 +32,80 @@ export default function DocumentsTable() {
   const [deletingId, setDeletingId] = useState(null)
   const [editingId, setEditingId] = useState(null)
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [totalItems, setTotalItems] = useState(0)
+
   const url = useMemo(() => {
     const params = new URLSearchParams()
     if (search) params.set('name', search)
     if (categoryFilter) params.set('category', categoryFilter)
     params.set('sort', sortDir)
-    params.set('limit', '100')
+    params.set('limit', itemsPerPage.toString())
+    params.set('skip', ((currentPage - 1) * itemsPerPage).toString())
     return `${API_BASE}/pacts?${params.toString()}`
-  }, [search, categoryFilter, sortDir])
+  }, [search, categoryFilter, sortDir, currentPage, itemsPerPage])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, categoryFilter, sortDir, itemsPerPage])
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     setError(null)
-    fetch(url)
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
-        const data = await r.json()
-        if (!cancelled) setItems(Array.isArray(data) ? data : [])
-      })
-      .catch((e) => !cancelled && setError(e.message))
-      .finally(() => !cancelled && setLoading(false))
-    return () => { cancelled = true }
-  }, [url])
+    
+    // Fetch data and total count in parallel
+    const fetchData = async () => {
+      try {
+        // Fetch paginated data
+        const dataResponse = await fetch(url)
+        if (!dataResponse.ok) throw new Error(`HTTP ${dataResponse.status}`)
+        const data = await dataResponse.json()
+        
+        // Fetch total count (without pagination)
+        const countParams = new URLSearchParams()
+        if (search) countParams.set('name', search)
+        if (categoryFilter) countParams.set('category', categoryFilter)
+        countParams.set('sort', sortDir)
+        countParams.set('limit', '500') // Maximum allowed by backend API
+        const countUrl = `${API_BASE}/pacts?${countParams.toString()}`
+        
+        const countResponse = await fetch(countUrl)
+        if (!countResponse.ok) throw new Error(`HTTP ${countResponse.status}`)
+        const allData = await countResponse.json()
+        
+        if (!cancelled) {
+          setItems(Array.isArray(data) ? data : [])
+          setTotalItems(Array.isArray(allData) ? allData.length : 0)
+        }
+      } catch (e) {
+        if (!cancelled) setError(e.message)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    
+    fetchData()
+    
+    // Listen for changes from other components
+    const handlePactsChanged = () => {
+      if (!cancelled) fetchData()
+    }
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('pacts-changed', handlePactsChanged)
+    }
+    
+    return () => { 
+      cancelled = true
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('pacts-changed', handlePactsChanged)
+      }
+    }
+  }, [url, search, categoryFilter, sortDir])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -78,8 +129,8 @@ export default function DocumentsTable() {
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const created = await res.json()
-      // Prepend new item and close form
-      setItems((prev) => [created, ...prev])
+      // Go to first page and refresh data
+      setCurrentPage(1)
       // Notify other components (e.g., Calendar) to refresh
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('pacts-changed', { detail: { type: 'create', id: created?.id } }))
@@ -104,7 +155,10 @@ export default function DocumentsTable() {
     try {
       const res = await fetch(`${API_BASE}/pacts/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      setItems((prev) => prev.filter((x) => x.id !== id))
+      // If we're on the last page and this was the last item, go to previous page
+      if (items.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1)
+      }
       // Notify other components (e.g., Calendar) to refresh
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('pacts-changed', { detail: { type: 'delete', id } }))
@@ -152,7 +206,7 @@ export default function DocumentsTable() {
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const updated = await res.json()
-      setItems((prev) => prev.map((x) => (x.id === d.id ? updated : x)))
+      // Stay on current page, data will refresh automatically
       // Notify other components (e.g., Calendar) to refresh
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('pacts-changed', { detail: { type: 'update', id: d.id } }))
@@ -284,6 +338,79 @@ export default function DocumentsTable() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      {totalItems > 0 && (
+        <div className="pagination-wrapper" style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          marginTop: '1rem',
+          padding: '0.75rem',
+          background: 'var(--panel)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius)',
+          gap: '1rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span className="label-text">Items per page:</span>
+            <select 
+              className="select" 
+              value={itemsPerPage} 
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              style={{ minWidth: '80px' }}
+            >
+              <option value={10}>10</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span className="muted">
+              Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}-{Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <button 
+              className="btn" 
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              title="First page"
+            >
+              ««
+            </button>
+            <button 
+              className="btn" 
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              title="Previous page"
+            >
+              «
+            </button>
+            <span className="muted" style={{ padding: '0 0.5rem' }}>
+              Page {currentPage} of {Math.ceil(totalItems / itemsPerPage)}
+            </span>
+            <button 
+              className="btn" 
+              onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalItems / itemsPerPage), p + 1))}
+              disabled={currentPage >= Math.ceil(totalItems / itemsPerPage)}
+              title="Next page"
+            >
+              »
+            </button>
+            <button 
+              className="btn" 
+              onClick={() => setCurrentPage(Math.ceil(totalItems / itemsPerPage))}
+              disabled={currentPage >= Math.ceil(totalItems / itemsPerPage)}
+              title="Last page"
+            >
+              »»
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
