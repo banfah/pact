@@ -1,17 +1,4 @@
 services:
-  mongodb:
-    image: mongo:7
-    container_name: pact-mongodb
-    restart: unless-stopped
-    ports:
-      - "27018:27017"
-    volumes:
-      - mongodb_data:/data/db
-    environment:
-      MONGO_INITDB_DATABASE: pactdb
-    networks:
-      - pact-network
-
   backend:
     build:
       context: .
@@ -20,10 +7,8 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
-    depends_on:
-      - mongodb
-    environment:
-      - MONGODB_URL=mongodb://mongodb:27017/pactdb
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - pact-network
 
@@ -40,8 +25,6 @@ services:
     networks:
       - pact-network
 
-volumes:
-  mongodb_data:
 
 networks:
   pact-network:

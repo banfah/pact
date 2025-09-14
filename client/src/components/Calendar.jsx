@@ -39,7 +39,7 @@ export default function Calendar({ date }) {
 
     async function reload() {
       try {
-        const r = await fetch(`${API_BASE}/pacts?limit=100&sort=desc`)
+        const r = await fetch(`${API_BASE}/pacts?limit=500&sort=desc`)
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
         const data = await r.json()
         if (!cancelled) setItems(Array.isArray(data) ? data : [])
